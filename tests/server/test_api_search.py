@@ -88,6 +88,25 @@ async def test_find_without_level_passes_none(client: httpx.AsyncClient, service
     assert captured["level"] is None
 
 
+async def test_find_with_mode_passes_to_service(client: httpx.AsyncClient, service, monkeypatch):
+    captured = {}
+
+    async def fake_find(*, mode=None, **kwargs):
+        captured["mode"] = mode
+        return {"items": []}
+
+    monkeypatch.setattr(service.search, "find", fake_find)
+
+    resp = await client.post(
+        "/api/v1/search/find",
+        json={"query": "sample", "mode": "quick"},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
+    assert captured["mode"] == "quick"
+
+
 async def test_find_level_filters_l2_only(client_with_resource):
     client, uri = client_with_resource
     resp = await client.post(
@@ -197,6 +216,25 @@ async def test_search_without_level_passes_none(client: httpx.AsyncClient, servi
     assert resp.status_code == 200
     assert resp.json()["status"] == "ok"
     assert captured["level"] is None
+
+
+async def test_search_with_mode_passes_to_service(client: httpx.AsyncClient, service, monkeypatch):
+    captured = {}
+
+    async def fake_search(*, mode=None, **kwargs):
+        captured["mode"] = mode
+        return {"items": []}
+
+    monkeypatch.setattr(service.search, "search", fake_search)
+
+    resp = await client.post(
+        "/api/v1/search/search",
+        json={"query": "sample", "mode": "quick"},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
+    assert captured["mode"] == "quick"
 
 
 async def test_search_level_filters_l2_only(client_with_resource):

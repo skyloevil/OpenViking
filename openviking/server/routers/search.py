@@ -80,6 +80,7 @@ class FindRequest(BaseModel):
     until: Optional[str] = None
     time_field: Optional[TimeField] = None
     level: Optional[Union[int, str, List[int]]] = None
+    mode: Optional[str] = None
     telemetry: TelemetryRequest = False
 
 
@@ -99,6 +100,7 @@ class SearchRequest(BaseModel):
     until: Optional[str] = None
     time_field: Optional[TimeField] = None
     level: Optional[Union[int, str, List[int]]] = None
+    mode: Optional[str] = None
     telemetry: TelemetryRequest = False
 
 
@@ -147,6 +149,7 @@ async def find(
             score_threshold=request.score_threshold,
             filter=effective_filter,
             level=_resolve_levels(request.level) or None,
+            mode=request.mode,
         ),
     )
     result = execution.result
@@ -190,6 +193,7 @@ async def search(
             score_threshold=request.score_threshold,
             filter=effective_filter,
             level=_resolve_levels(request.level) or None,
+            mode=request.mode,
         )
 
     execution = await run_operation(

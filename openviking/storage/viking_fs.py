@@ -1345,6 +1345,19 @@ class VikingFS:
                     result.append({"uri": u, "reason": entry.reason})
         return result
 
+    @staticmethod
+    def _resolve_retriever_mode(mode: Optional[str]) -> str:
+        """Normalize a client-supplied mode string to a canonical RetrieverMode value.
+
+        "fast" and "quick" map to QUICK (vector-only, no rerank).
+        Everything else ("thinking", "deep", "auto", None) maps to THINKING.
+        """
+        from openviking.retrieve.hierarchical_retriever import RetrieverMode
+
+        if mode in (RetrieverMode.QUICK, "fast"):
+            return RetrieverMode.QUICK
+        return RetrieverMode.THINKING
+
     async def find(
         self,
         query: str,
@@ -1354,6 +1367,7 @@ class VikingFS:
         filter: Optional[Dict] = None,
         ctx: Optional[RequestContext] = None,
         level: Optional[List[int]] = None,
+        mode: Optional[str] = None,
     ):
         """Semantic search.
 
@@ -1430,6 +1444,7 @@ class VikingFS:
             score_threshold=score_threshold,
             scope_dsl=filter,
             level=level,
+            mode=self._resolve_retriever_mode(mode),
         )
 
         # Convert QueryResult to FindResult
@@ -1460,6 +1475,7 @@ class VikingFS:
         filter: Optional[Dict] = None,
         ctx: Optional[RequestContext] = None,
         level: Optional[List[int]] = None,
+        mode: Optional[str] = None,
     ):
         """Complex search with session context.
 
@@ -1582,6 +1598,7 @@ class VikingFS:
                 score_threshold=score_threshold,
                 scope_dsl=filter,
                 level=level,
+                mode=self._resolve_retriever_mode(mode),
             )
 
         query_results = await asyncio.gather(*[_execute(tq) for tq in typed_queries])
